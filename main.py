@@ -1,5 +1,6 @@
 from tkinter import Tk, BOTH, Canvas
 import time
+import random
 # defines the window display
 class Window:
     def __init__(self, width, height):
@@ -65,6 +66,7 @@ class Cell:
         self.__y1 = -1
         self.__y2 = -1
         self.__win = window
+        self.visited = False
     def draw(self, x1, y1, x2, y2):
         self.__x1 = x1
         self.__x2 = x2
@@ -90,16 +92,7 @@ class Cell:
         return (center_x, center_y)
 # defines the maze itself
 class Maze:
-    def __init__(
-        self,
-        x1,
-        y1,
-        num_rows,
-        num_cols,
-        cell_size_x,
-        cell_size_y,
-        win=None,
-    ):
+    def __init__(self, x1, y1, num_rows, num_cols, cell_size_x, cell_size_y, win=None, seed=None):
         self.x1 = x1
         self.y1 = y1
         self.num_rows = num_rows
@@ -109,6 +102,8 @@ class Maze:
         self.win = win
         self.grid = []
         self.__create_cells()
+        if seed != None:
+            random.seed(seed)
     # creates the cells that make up the maze
     def __create_cells(self):
         for row in range(self.num_rows):
@@ -145,13 +140,53 @@ class Maze:
         self.__draw_cell(0, 0)
         self.grid[self.num_rows - 1][self.num_cols - 1].has_bottom_wall = False
         self.__draw_cell(self.num_rows - 1, self.num_cols - 1)
+    def _break_walls_r(self, i, j):
+        self.grid[i][j].visited = True
+        while True:
+            neighbors = []
+            # top
+            if i - 1 >= 0 and not self.grid[i-1][j].visited:
+                neighbors.append((i - 1, j))
+            # bottom
+            if i + 1 < self.num_rows and not self.grid[i+1][j].visited:
+                neighbors.append((i + 1, j))
+            # left
+            if j - 1 >= 0 and not self.grid[i][j-1].visited:
+                neighbors.append((i, j - 1))
+            # right
+            if j + 1 < self.num_cols and not self.grid[i][j+1].visited:
+                neighbors.append((i, j + 1))
+            # ends if no valid move remains
+            if len(neighbors) == 0:
+                return
+            next_i, next_j = random.choice(neighbors)
+            # wall-breaking
+            # up
+            if next_i - i == -1:
+                self.grid[i][j].has_top_wall = False
+                self.grid[next_i][next_j].has_bottom_wall = False
+            # down
+            elif next_i - i == 1:
+                self.grid[i][j].has_bottom_wall = False
+                self.grid[next_i][next_j].has_top_wall = False
+            # left
+            elif next_j - j == -1:
+                self.grid[i][j].has_left_wall = False
+                self.grid[next_i][next_j].has_right_wall = False
+            # right
+            elif next_j -j == 1:
+                self.grid[i][j].has_right_wall = False
+                self.grid[next_i][next_j].has_left_wall = False
+            self.__draw_cell(i, j)
+            self.__draw_cell(next_i, next_j)
+            self._break_walls_r(next_i, next_j)
 # primary function
 def main():
     # defines window size
     window_width = 1000
     window_height = 800
-    num_rows = 3
-    num_cols = 5
+    num_rows = 10
+    num_cols = 10
     win = Window(window_width, window_height)
     cell_size_x = 20
     cell_size_y = 20
@@ -162,6 +197,7 @@ def main():
     y1 = (window_height - maze_height) // 2
     maze = Maze(x1, y1, num_rows, num_cols, cell_size, cell_size, win)
     maze._break_entrance_and_exit()
+    maze._break_walls_r(0, 0)
     # Wait for user to close the window
     win.wait_for_close()
 if __name__ == "__main__":
