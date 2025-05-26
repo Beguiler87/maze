@@ -125,7 +125,7 @@ class Maze:
         if self.win == None:
             return
         self.win.redraw()
-        time.sleep(0.05)
+        time.sleep(0.1)
     def __draw_cell(self, i, j):
         cell = self.grid[i][j]
         x1 = self.x1 + j * self.cell_size_x
@@ -186,9 +186,75 @@ class Maze:
         for row in self.grid:
             for cell in row:
                 cell.visited = False
+    # carves the maze
     def break_walls(self):
         self._break_walls_r(0, 0)
         self.__reset_cells_visited()
+    # initiates the solution to the maze
+    def solve(self):
+        for row in self.grid:
+            for cell in row:
+                cell.visited = False
+        return self._solve_r(0, 0)
+    # recursive function to draw the solution
+    def _solve_r(self, i, j):
+        self._animate()
+        self.grid[i][j].visited = True
+        if i == self.num_rows-1 and j == self.num_cols-1:
+            return True
+        # solve right
+        if j+1 < self.num_cols and self.grid[i][j].has_right_wall == False and self.grid[i][j+1].has_left_wall == False and self.grid[i][j+1].visited == False:
+            x = self.grid[i][j].get_center()
+            y = self.grid[i][j+1].get_center()
+            start = Point(x[0], x[-1])
+            end = Point(y[0], y[-1])
+            my_line = Line(start, end)
+            self.win.draw_line(my_line, "red")
+            self.win.redraw()
+            if self._solve_r(i, j+1):
+                return True
+            self.win.draw_line(my_line, "white")
+            self.win.redraw()
+        # solve left
+        if j-1 >= 0 and self.grid[i][j].has_left_wall == False and self.grid[i][j-1].has_right_wall == False and self.grid[i][j-1].visited == False:
+            x = self.grid[i][j].get_center()
+            y = self.grid[i][j-1].get_center()
+            start = Point(x[0], x[-1])
+            end = Point(y[0], y[-1])
+            my_line = Line(start, end)
+            self.win.draw_line(my_line, "red")
+            self.win.redraw()
+            if self._solve_r(i, j-1):
+                return True
+            self.win.draw_line(my_line, "white")
+            self.win.redraw()
+        # solve up
+        if i-1 >= 0 and self.grid[i][j].has_top_wall == False and self.grid[i-1][j].has_bottom_wall == False and self.grid[i-1][j].visited == False:
+            x = self.grid[i-1][j].get_center()
+            y = self.grid[i][j].get_center()
+            start = Point(x[0], x[-1])
+            end = Point(y[0], y[-1])
+            my_line = Line(start, end)
+            self.win.draw_line(my_line, "red")
+            self.win.redraw()
+            if self._solve_r(i-1, j):
+                return True
+            self.win.draw_line(my_line, "white")
+            self.win.redraw()
+        # solve down
+        if i+1 < self.num_rows and self.grid[i][j].has_bottom_wall == False and self.grid[i+1][j].has_top_wall == False and self.grid[i+1][j].visited == False:
+            x = self.grid[i+1][j].get_center()
+            y = self.grid[i][j].get_center()
+            start = Point(x[0], x[-1])
+            end = Point(y[0], y[-1])
+            my_line = Line(start, end)
+            self.win.draw_line(my_line, "red")
+            self.win.redraw()
+            if self._solve_r(i+1, j):
+                return True
+            self.win.draw_line(my_line, "white")
+            self.win.redraw()
+        return False
 # primary function
 def main():
     # defines window size
@@ -207,6 +273,7 @@ def main():
     maze = Maze(x1, y1, num_rows, num_cols, cell_size, cell_size, win)
     maze._break_entrance_and_exit()
     maze.break_walls()
+    maze.solve()
     # Wait for user to close the window
     win.wait_for_close()
 if __name__ == "__main__":
