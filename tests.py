@@ -59,5 +59,25 @@ class Tests(unittest.TestCase):
         maze._break_entrance_and_exit()
         self.assertEqual(maze.grid[0][0].has_top_wall, False)
         self.assertEqual(maze.grid[maze.num_rows - 1][maze.num_cols - 1].has_bottom_wall, False)
+    def test_cells_false_after_carve(self):
+        window_width = 1000
+        window_height = 800
+        num_rows = 6
+        num_cols = 6
+        win = None
+        cell_size_x = 20
+        cell_size_y = 20
+        cell_size = int(min(cell_size_x, cell_size_y))
+        maze_width = num_cols * cell_size
+        maze_height = num_rows * cell_size
+        x1 = (window_width - maze_width) // 2
+        y1 = (window_height - maze_height) // 2
+        maze = Maze(x1, y1, num_rows, num_cols, cell_size, cell_size, win)
+        maze._break_entrance_and_exit()
+        maze.break_walls()
+        maze._Maze__reset_cells_visited()
+        for row in maze.grid:
+            for cell in row:
+                self.assertEqual(cell.visited, False)
 if __name__ == "__main__":
     unittest.main()

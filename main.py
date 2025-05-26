@@ -140,6 +140,7 @@ class Maze:
         self.__draw_cell(0, 0)
         self.grid[self.num_rows - 1][self.num_cols - 1].has_bottom_wall = False
         self.__draw_cell(self.num_rows - 1, self.num_cols - 1)
+    # carves the maze
     def _break_walls_r(self, i, j):
         self.grid[i][j].visited = True
         while True:
@@ -180,6 +181,14 @@ class Maze:
             self.__draw_cell(i, j)
             self.__draw_cell(next_i, next_j)
             self._break_walls_r(next_i, next_j)
+    # resets cells visited after carving the maze.
+    def __reset_cells_visited(self):
+        for row in self.grid:
+            for cell in row:
+                cell.visited = False
+    def break_walls(self):
+        self._break_walls_r(0, 0)
+        self.__reset_cells_visited()
 # primary function
 def main():
     # defines window size
@@ -197,7 +206,7 @@ def main():
     y1 = (window_height - maze_height) // 2
     maze = Maze(x1, y1, num_rows, num_cols, cell_size, cell_size, win)
     maze._break_entrance_and_exit()
-    maze._break_walls_r(0, 0)
+    maze.break_walls()
     # Wait for user to close the window
     win.wait_for_close()
 if __name__ == "__main__":
